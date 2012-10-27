@@ -1,4 +1,5 @@
 import redis
+from redis_shard.shard import RedisShardAPI
 
 try:
     from django.utils.encoding import force_unicode
@@ -29,6 +30,9 @@ elif settings.SESSION_REDIS_UNIX_DOMAIN_SOCKET_PATH is None:
         db=settings.SESSION_REDIS_DB,
         password=settings.SESSION_REDIS_PASSWORD
     )
+elif settings.SESSION_REDIS_HOSTS:
+    # Used with redis-shard
+    redis_server = RedisShardAPI(settings.SESSION_REDIS_HOSTS)
 else:
 
     redis_server = redis.StrictRedis(

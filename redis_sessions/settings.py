@@ -1,6 +1,6 @@
 from django.conf import settings
 
-
+SESSION_REDIS_HOSTS  = getattr(settings, 'SESSION_REDIS_HOST', [{'name':'server1','host':'127.0.0.1','port':10000,'db':0},])
 SESSION_REDIS_HOST = getattr(settings, 'SESSION_REDIS_HOST', 'localhost')
 SESSION_REDIS_PORT = getattr(settings, 'SESSION_REDIS_PORT', 6379)
 SESSION_REDIS_DB = getattr(settings, 'SESSION_REDIS_DB', 0)
