@@ -1,4 +1,5 @@
 import redis
+from redis_shard.shard import RedisShardAPI
 from django.utils.encoding import force_unicode
 from django.contrib.sessions.backends.base import SessionBase, CreateError
 from django.conf import settings
@@ -17,12 +18,7 @@ class SessionStore(SessionBase):
             unix_socket_path = None
         
         if unix_socket_path is None:
-            self.server = redis.StrictRedis(
-                host=getattr(settings, 'SESSION_REDIS_HOST', 'localhost'),
-                port=getattr(settings, 'SESSION_REDIS_PORT', 6379),
-                db=getattr(settings, 'SESSION_REDIS_DB', 0),
-                password=getattr(settings, 'SESSION_REDIS_PASSWORD', None),
-            )
+            self.server = RedisShardAPI(settings.SESSION_REDIS_HOSTS)
         else:
             self.server = redis.StrictRedis(
                 unix_socket_path=getattr(settings, 'SESSION_REDIS_UNIX_DOMAIN_SOCKET_PATH', '/var/run/redis/redis.sock'),
