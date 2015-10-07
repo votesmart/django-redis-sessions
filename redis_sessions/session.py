@@ -1,4 +1,5 @@
 import redis
+import datetime
 from redis_shard.shard import RedisShardAPI
 from django.utils.encoding import force_unicode
 from django.contrib.sessions.backends.base import SessionBase, CreateError
@@ -11,12 +12,12 @@ class SessionStore(SessionBase):
     """
     def __init__(self, session_key=None):
         super(SessionStore, self).__init__(session_key)
-        
+
         try:
             unix_socket_path=getattr(settings, 'SESSION_REDIS_UNIX_DOMAIN_SOCKET_PATH', None)
         except AttributeError:
             unix_socket_path = None
-        
+
         if unix_socket_path is None:
             self.server = RedisShardAPI(settings.SESSION_REDIS_HOSTS)
         else:
@@ -25,7 +26,7 @@ class SessionStore(SessionBase):
                 db=getattr(settings, 'SESSION_REDIS_DB', 0),
                 password=getattr(settings, 'SESSION_REDIS_PASSWORD', None),
             )
-        
+
     def load(self):
         try:
             session_data = self.server.get(self.get_real_stored_key(self._get_or_create_session_key()))
@@ -40,7 +41,7 @@ class SessionStore(SessionBase):
     def create(self):
         while True:
             self._session_key = self._get_new_session_key()
-            
+
             try:
                 self.save(must_create=True)
             except CreateError:
@@ -52,6 +53,16 @@ class SessionStore(SessionBase):
         if not getattr(settings, 'SITE_READ_ONLY', False):
             if must_create and self.exists(self._get_or_create_session_key()):
                 raise CreateError
+
+            this_session = self._get_session(no_load=must_create)
+
+            for key, value in this_session.iteritems():
+                if isinstance(value, dict):
+                    try:
+                        value['time'] = value['time'].isoformat()
+                    except:
+                        pass
+
             data = self.encode(self._get_session(no_load=must_create))
             if redis.VERSION[0] >= 2:
                 self.server.setex(self.get_real_stored_key(self._get_or_create_session_key()), self.get_expiry_age(), data)
