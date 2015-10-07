@@ -53,6 +53,13 @@ class SessionStore(SessionBase):
         if not getattr(settings, 'SITE_READ_ONLY', False):
             if must_create and self.exists(self._get_or_create_session_key()):
                 raise CreateError
+            this_session = self._get_session(no_load=must_create)
+            for key, value in this_session.iteritems():
+                if isinstance(value, dict):
+                    try:
+                        value['time'] = value['time'].isoformat()
+                    except:
+                        pass
             data = self.encode(self._get_session(no_load=must_create))
             if redis.VERSION[0] >= 2:
                 self.server.setex(self.get_real_stored_key(self._get_or_create_session_key()), self.get_expiry_age(), data)
