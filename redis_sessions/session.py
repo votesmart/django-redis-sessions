@@ -12,12 +12,12 @@ class SessionStore(SessionBase):
     """
     def __init__(self, session_key=None):
         super(SessionStore, self).__init__(session_key)
-        
+
         try:
             unix_socket_path=getattr(settings, 'SESSION_REDIS_UNIX_DOMAIN_SOCKET_PATH', None)
         except AttributeError:
             unix_socket_path = None
-        
+
         if unix_socket_path is None:
             self.server = RedisShardAPI(settings.SESSION_REDIS_HOSTS)
         else:
@@ -26,7 +26,7 @@ class SessionStore(SessionBase):
                 db=getattr(settings, 'SESSION_REDIS_DB', 0),
                 password=getattr(settings, 'SESSION_REDIS_PASSWORD', None),
             )
-        
+
     def load(self):
         try:
             session_data = self.server.get(self.get_real_stored_key(self._get_or_create_session_key()))
@@ -41,7 +41,7 @@ class SessionStore(SessionBase):
     def create(self):
         while True:
             self._session_key = self._get_new_session_key()
-            
+
             try:
                 self.save(must_create=True)
             except CreateError:
